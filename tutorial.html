@@ -13,7 +13,7 @@
             font-family: 'Press Start 2P', monospace;
             position: relative;
             overflow: hidden;
-            line-height: 1.5;
+            line-height: 1.8;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -28,14 +28,15 @@
             display: flex;
             flex-direction: column;
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
+            max-height: 90vh;
             margin: 20px;
-            padding: 20px;
-            background: rgba(0, 0, 30, 0.9);
+            padding: 25px;
+            background: rgba(0, 0, 30, 0.95);
             border: 4px solid #FF0000;
             border-radius: 0;
             box-shadow: 0 0 25px #FF0000, inset 0 0 15px #000060;
-            overflow-y: auto;
+            overflow: hidden;
             color: #00FF00;
             position: relative;
             z-index: 2;
@@ -45,7 +46,7 @@
             text-align: center;
             color: #FF0000;
             text-shadow: 0 0 10px #FF0000;
-            font-size: 2em;
+            font-size: 2.2em;
             margin-bottom: 25px;
             border-bottom: 2px solid #FF0000;
             padding-bottom: 15px;
@@ -55,8 +56,9 @@
         h2 {
             color: #FFFF00;
             text-shadow: 0 0 10px #FFFF00;
-            font-size: 1.5em;
-            margin-top: 30px;
+            font-size: 1.4em;
+            margin-top: 25px;
+            margin-bottom: 15px;
             border-left: 4px solid #FFFF00;
             padding-left: 15px;
         }
@@ -64,6 +66,8 @@
         p {
             margin: 15px 0;
             text-shadow: 0 0 5px #00FF00;
+            font-size: 0.9em;
+            line-height: 1.6;
         }
 
         ul {
@@ -76,7 +80,7 @@
             margin: 12px 0;
             display: flex;
             align-items: center;
-            font-size: 1em;
+            font-size: 0.9em;
         }
 
         ul li img {
@@ -91,17 +95,23 @@
 
         .rainbow-brick {
             animation: rainbowAnimation 2s linear infinite;
+            filter: saturate(2) brightness(1.2);
         }
 
         @keyframes rainbowAnimation {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
+            0% { filter: hue-rotate(0deg) saturate(2) brightness(1.2); }
+            16.66% { filter: hue-rotate(60deg) saturate(2) brightness(1.2); }
+            33.33% { filter: hue-rotate(120deg) saturate(2) brightness(1.2); }
+            50% { filter: hue-rotate(180deg) saturate(2) brightness(1.2); }
+            66.66% { filter: hue-rotate(240deg) saturate(2) brightness(1.2); }
+            83.33% { filter: hue-rotate(300deg) saturate(2) brightness(1.2); }
+            100% { filter: hue-rotate(360deg) saturate(2) brightness(1.2); }
         }
 
         .navigation-buttons {
             display: flex;
             justify-content: space-between;
-            margin-top: 30px;
+            margin-top: auto;
             padding-top: 20px;
             border-top: 2px solid #FF0000;
         }
@@ -151,11 +161,32 @@
 
         .page {
             display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
         }
 
         .page.active {
             display: block;
             animation: fadeIn 0.5s;
+        }
+
+        .page::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .page::-webkit-scrollbar-track {
+            background: #000033;
+            border: 1px solid #003366;
+        }
+
+        .page::-webkit-scrollbar-thumb {
+            background: #00CCFF;
+            border-radius: 5px;
+        }
+
+        .page::-webkit-scrollbar-thumb:hover {
+            background: #00FFFF;
         }
 
         @keyframes fadeIn {
@@ -172,7 +203,8 @@
         .page-indicator {
             display: flex;
             justify-content: center;
-            margin-top: 20px;
+            margin-top: 15px;
+            margin-bottom: 15px;
         }
 
         .page-dot {
@@ -182,6 +214,8 @@
             background-color: #444;
             margin: 0 5px;
             border: 2px solid #888;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
         .page-dot.active {
@@ -229,6 +263,38 @@
             font-size: 0.8em;
             color: #AAFFFF;
         }
+
+        /* Style pour les listes d'astuces */
+        .tips-list {
+            list-style-type: disc;
+            margin-left: 30px;
+        }
+
+        .tips-list li {
+            display: list-item;
+            margin: 10px 0;
+        }
+
+        /* Contrôles bien visibles */
+        .controls-box {
+            background: rgba(0, 0, 60, 0.6);
+            border: 2px solid #00FF00;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: 0 0 10px #00FF00;
+        }
+
+        .control-key {
+            display: inline-block;
+            background: #000033;
+            border: 2px solid #FFFF00;
+            padding: 5px 10px;
+            margin: 0 5px;
+            color: #FFFF00;
+            font-weight: bold;
+            box-shadow: 0 0 5px #FFFF00;
+        }
     </style>
 </head>
 <body>
@@ -245,10 +311,11 @@
             </p>
 
             <h2>CONTRÔLES</h2>
-            <ul>
-                <li><strong>←</strong> Déplacez la raquette vers la gauche.</li>
-                <li><strong>→</strong> Déplacez la raquette vers la droite.</li>
-            </ul>
+            <div class="controls-box">
+                <p><span class="control-key">←</span> Déplacez la raquette vers la gauche</p>
+                <p><span class="control-key">→</span> Déplacez la raquette vers la droite</p>
+                <p><span class="control-key">P</span> Mettre le jeu en pause / Reprendre</p>
+            </div>
 
             <h2>COMMENT JOUER</h2>
             <p>
@@ -256,6 +323,9 @@
             </p>
             <p>
                 Quand vous détruisez toutes les briques d'un niveau, vous passez au niveau suivant, qui sera plus difficile. Plus vous avancez, plus la balle se déplace rapidement.
+            </p>
+            <p>
+                <strong>Important :</strong> En mode multiball, vous ne perdez une vie que lorsque TOUTES les balles sont perdues !
             </p>
         </div>
 
@@ -282,14 +352,14 @@
         <!-- Page 3: Power-Ups -->
         <div class="page" id="page3">
             <h2>POWER-UPS</h2>
-            <p>Les briques détruites ont une chance de libérer un power-up. Attrapez-les avec votre raquette pour obtenir des avantages temporaires !</p>
+            <p>Les briques détruites ont une chance de libérer un power-up (25% de chance). Attrapez-les avec votre raquette pour obtenir des avantages temporaires !</p>
             
             <div class="powerup-grid">
                 <div class="powerup-item">
                     <img src="assets/powerup.png" alt="Multiplicateur">
                     <div class="powerup-info">
                         <div class="powerup-name">MULTIPLICATEUR</div>
-                        <div class="powerup-description">Augmente le multiplicateur de points de 1. Dure 10 secondes.</div>
+                        <div class="powerup-description">Augmente le multiplicateur de points de 1. Dure 10 secondes. CUMULATIF !</div>
                     </div>
                 </div>
                 
@@ -297,7 +367,7 @@
                     <img src="assets/exploball.png" alt="Balles Multiples">
                     <div class="powerup-info">
                         <div class="powerup-name">BALLES MULTIPLES</div>
-                        <div class="powerup-description">Ajoute 2 balles supplémentaires en jeu.</div>
+                        <div class="powerup-description">Ajoute 2 balles supplémentaires en jeu. CUMULATIF sans limite !</div>
                     </div>
                 </div>
                 
@@ -305,7 +375,7 @@
                     <img src="assets/extend.png" alt="Élargir Raquette">
                     <div class="powerup-info">
                         <div class="powerup-name">RAQUETTE ÉLARGIE</div>
-                        <div class="powerup-description">Augmente la largeur de la raquette de 50%. Dure 15 secondes.</div>
+                        <div class="powerup-description">Augmente la largeur de la raquette de 30%. Dure 15 secondes. CUMULATIF (max 300%) !</div>
                     </div>
                 </div>
                 
@@ -313,7 +383,7 @@
                     <img src="assets/shrink.png" alt="Rétrécir Raquette">
                     <div class="powerup-info">
                         <div class="powerup-name">RAQUETTE RÉTRÉCIE</div>
-                        <div class="powerup-description">Réduit la largeur de la raquette à 70%. Dure 10 secondes.</div>
+                        <div class="powerup-description">Réduit la largeur de la raquette de 30%. Dure 10 secondes. CUMULATIF (min 50%) !</div>
                     </div>
                 </div>
                 
@@ -326,7 +396,7 @@
                 </div>
             </div>
             
-            <p>
+            <p style="margin-top: 20px; color: #FF0000; text-shadow: 0 0 10px #FF0000;">
                 Attention : Certains power-ups peuvent être négatifs, comme la raquette rétrécie !
             </p>
         </div>
@@ -335,7 +405,7 @@
         <div class="page" id="page4">
             <h2>ASTUCES ET CONSEILS</h2>
             
-            <ul style="list-style-type: disc; margin-left: 30px;">
+            <ul class="tips-list">
                 <li>Frappez la balle avec différentes parties de la raquette pour modifier son angle de rebond.</li>
                 <li>Les bords de la raquette donnent un angle plus prononcé à la balle.</li>
                 <li>Essayez de garder la balle au-dessus du terrain pour maximiser les chances de toucher des briques.</li>
@@ -343,6 +413,8 @@
                 <li>Les briques arc-en-ciel rapportent plus de points, visez-les en priorité.</li>
                 <li>N'hésitez pas à sacrifier une balle pour attraper un bon power-up, si vous avez plusieurs vies.</li>
                 <li>Quand vous avez plusieurs balles, concentrez-vous sur celle qui est la plus difficile à récupérer.</li>
+                <li>Les power-ups de taille de raquette se cumulent - profitez-en !</li>
+                <li>N'oubliez pas la touche P pour faire une pause si nécessaire.</li>
             </ul>
             
             <h2>CRÉDITS</h2>
@@ -350,7 +422,7 @@
                 Gregonoïd a été créé par RetroGreg en 2024/2025. Inspiré des classiques comme Arkanoid et Krypton Egg.
             </p>
             
-            <p style="text-align: center; margin-top: 30px; color: #FF0000; text-shadow: 0 0 10px #FF0000;">
+            <p style="text-align: center; margin-top: 30px; color: #FF0000; text-shadow: 0 0 10px #FF0000; font-size: 1.2em;">
                 BON JEU !
             </p>
         </div>
@@ -382,6 +454,24 @@
         const pageDots = document.querySelectorAll('.page-dot');
         const hoverSound = new Audio('assets/sounds/menu_hover.wav');
         const clickSound = new Audio('assets/sounds/blip.wav');
+        
+        // Animation arc-en-ciel pour la brique
+        const rainbowColors = ['#ff4444', '#ff8844', '#ffdd44', '#44ff44', '#4444ff', '#cc44ff'];
+        let colorIndex = 0;
+        
+        function animateRainbowBrick() {
+            const rainbowBricks = document.querySelectorAll('.rainbow-brick');
+            rainbowBricks.forEach(brick => {
+                // Si c'est une image, on applique un filtre coloré
+                if (brick.tagName === 'IMG') {
+                    brick.style.filter = `hue-rotate(${colorIndex * 60}deg) saturate(2) brightness(1.2)`;
+                }
+            });
+            colorIndex = (colorIndex + 1) % 6;
+        }
+        
+        // Démarrer l'animation
+        setInterval(animateRainbowBrick, 200);
         
         function updatePageDisplay() {
             // Cacher toutes les pages

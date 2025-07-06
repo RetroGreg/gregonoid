@@ -15,7 +15,8 @@ let isPaused = false; // Pour la pause
 let multiBalls = []; // Pour stocker les balles supplémentaires
 let originalPaddleWidth = 104; // Largeur par défaut de la raquette
 let maxBallSpeed = 500; // Vitesse maximale de la balle
-let multiballCount = 0; // Compteur de power-ups multiball actifs
+let paddleScale = 1; // Échelle actuelle de la raquette
+let waitingForNextLevel = false; // Pour empêcher les actions pendant la transition
 
 const pointsPerBrick = {
   brick_red: 10,
@@ -61,8 +62,6 @@ const config = {
       checkCollision: { down: false },
       fps: 60,
       timeScale: 1,
-      tileBias: 16,
-      overlapBias: 8,
     },
   },
   scene: {
@@ -131,10 +130,9 @@ function create() {
   this.ball = this.physics.add.image(320, 400, "ball");
   this.ball.setCollideWorldBounds(true);
   this.ball.setBounce(1);
-  this.ball.setVelocity(ballSpeed, -ballSpeed);
+  this.ball.setVelocity(0, 0); // La balle ne bouge pas au début
   this.ball.setData("isMainBall", true); // Marquer comme balle principale
   this.ball.body.onWorldBounds = true;
-  this.physics.world.setFPS(120); // Plus de checks par seconde
 
   createBricks.call(this);
 
@@ -148,27 +146,15 @@ function create() {
     on: false,
   });
 
-  // Ajouter un bouton de retour au menu
+  // Ajouter les indications de contrôles en bas de l'écran
   this.add
-    .text(320, 500, "MENU PRINCIPAL", {
-      font: "16px Press Start 2P",
-      fill: "#00CCFF",
+    .text(320, 460, "← → Déplacer | P Pause", {
+      font: "12px Press Start 2P",
+      fill: "#888888",
       stroke: "#000000",
-      strokeThickness: 4,
-      backgroundColor: "#000033",
-      padding: { x: 15, y: 8 },
+      strokeThickness: 2,
     })
-    .setOrigin(0.5, 0.5)
-    .setInteractive()
-    .on("pointerover", function () {
-      this.setStyle({ fill: "#FFFF00" });
-    })
-    .on("pointerout", function () {
-      this.setStyle({ fill: "#00CCFF" });
-    })
-    .on("pointerdown", function () {
-      window.location.href = "index.html";
-    });
+    .setOrigin(0.5, 0.5);
 
   // Ajouter un indicateur de pause
   this.pauseText = this.add
@@ -211,8 +197,18 @@ function create() {
   this.gameScene = this;
 }
 
+// Attendre que le DOM soit chargé avant d'ajouter l'event listener
+document.addEventListener('DOMContentLoaded', function() {
+  const menuButton = document.getElementById("menuButton");
+  if (menuButton) {
+    menuButton.addEventListener("click", function() {
+      window.location.href = "index.html";
+    });
+  }
+});
+
 function togglePause() {
-  if (isGameOver) return;
+  if (isGameOver || waitingForNextLevel) return;
   
   isPaused = !isPaused;
   
@@ -226,6 +222,8 @@ function togglePause() {
 }
 
 function displayLevelMessage(text) {
+  waitingForNextLevel = true;
+  
   let message = this.add
     .text(320, 240, text, {
       font: "48px Press Start 2P",
@@ -250,6 +248,7 @@ function displayLevelMessage(text) {
     () => {
       message.destroy();
       this.ball.setVelocity(ballSpeed, -ballSpeed);
+      waitingForNextLevel = false;
     },
     [],
     this
@@ -263,7 +262,7 @@ function handlePaddleCollision(ball, paddle) {
 
   // Position relative de la balle par rapport au centre de la raquette
   const hitPoint = ball.x - paddle.x;
-  const paddleWidth = paddle.width;
+  const paddleWidth = paddle.width * paddle.scaleX; // Prendre en compte l'échelle
 
   // Normaliser la position entre -1 (extrême gauche) et 1 (extrême droite)
   const normalizedHitPoint = hitPoint / (paddleWidth / 2);
@@ -289,61 +288,79 @@ function handlePaddleCollision(ball, paddle) {
 }
 
 function handleBrickCollision(ball, brick) {
-    // Éviter les collisions multiples avec la même brique
-    if (brick.getData('isDestroyed')) {
-        return;
-    }
-    
-    // Marquer la brique comme détruite
-    brick.setData('isDestroyed', true);
-    
-    // Jouer le son de collision
-    this.boomSound.play();
+  // Éviter les collisions multiples avec la même brique
+  if (brick.getData('isDestroyed')) {
+    return;
+  }
   
-    // Calculer la direction du rebond AVANT de détruire la brique
-    const ballVelocity = ball.body.velocity.clone();
-    const ballCenter = { x: ball.x, y: ball.y };
-    const brickCenter = { x: brick.x, y: brick.y };
-    
-    // Calculer les différences pour déterminer le côté de collision
-    const diffX = ballCenter.x - brickCenter.x;
-    const diffY = ballCenter.y - brickCenter.y;
-    
-    // Dimensions de la brique
-    const halfWidth = brick.width / 2;
-    const halfHeight = brick.height / 2;
-    
-    // Déterminer la direction du rebond
-    const overlapX = halfWidth - Math.abs(diffX);
-    const overlapY = halfHeight - Math.abs(diffY);
-    
-    // Si l'overlap horizontal est plus petit, c'est une collision latérale
-    if (overlapX < overlapY) {
-        // Collision horizontale (gauche ou droite)
-        ballVelocity.x = -ballVelocity.x;
+  // Marquer la brique comme détruite immédiatement
+  brick.setData('isDestroyed', true);
+  
+  // Jouer le son de collision
+  this.boomSound.play();
+
+  // Calculer la direction du rebond AVANT de modifier la brique
+  const ballVelocity = ball.body.velocity.clone();
+  const ballCenterX = ball.x;
+  const ballCenterY = ball.y;
+  const brickCenterX = brick.x;
+  const brickCenterY = brick.y;
+  
+  // Dimensions de la brique et de la balle
+  const brickWidth = brick.width;
+  const brickHeight = brick.height;
+  const ballRadius = ball.width / 2;
+  
+  // Calculer les distances depuis le centre de la balle jusqu'aux bords de la brique
+  const distanceX = Math.abs(ballCenterX - brickCenterX);
+  const distanceY = Math.abs(ballCenterY - brickCenterY);
+  
+  // Calculer les pénétrations
+  const penetrationX = (brickWidth / 2 + ballRadius) - distanceX;
+  const penetrationY = (brickHeight / 2 + ballRadius) - distanceY;
+  
+  // Déterminer de quel côté vient la collision
+  if (penetrationX > 0 && penetrationY > 0) {
+    // Il y a collision
+    if (penetrationX < penetrationY) {
+      // Collision latérale (gauche ou droite)
+      ballVelocity.x = -ballVelocity.x;
+      
+      // Pousser la balle hors de la brique
+      if (ballCenterX < brickCenterX) {
+        ball.x = brickCenterX - brickWidth / 2 - ballRadius - 1;
+      } else {
+        ball.x = brickCenterX + brickWidth / 2 + ballRadius + 1;
+      }
     } else {
-        // Collision verticale (haut ou bas)
-        ballVelocity.y = -ballVelocity.y;
+      // Collision verticale (haut ou bas)
+      ballVelocity.y = -ballVelocity.y;
+      
+      // Pousser la balle hors de la brique
+      if (ballCenterY < brickCenterY) {
+        ball.y = brickCenterY - brickHeight / 2 - ballRadius - 1;
+      } else {
+        ball.y = brickCenterY + brickHeight / 2 + ballRadius + 1;
+      }
     }
-    
-    // Ajouter une légère randomisation pour éviter les boucles infinies
-    const randomFactor = 0.02;
-    ballVelocity.x *= (1 + (Math.random() - 0.5) * randomFactor);
-    ballVelocity.y *= (1 + (Math.random() - 0.5) * randomFactor);
-    
-    // Appliquer immédiatement la nouvelle vélocité
-    ball.setVelocity(ballVelocity.x, ballVelocity.y);
-    
-    // Pousser légèrement la balle hors de la brique pour éviter le tunneling
-    if (overlapX < overlapY) {
-        // Pousser horizontalement
-        const pushX = diffX > 0 ? overlapX + 1 : -(overlapX + 1);
-        ball.x += pushX;
-    } else {
-        // Pousser verticalement
-        const pushY = diffY > 0 ? overlapY + 1 : -(overlapY + 1);
-        ball.y += pushY;
-    }
+  }
+  
+  // Ajouter une petite variation pour éviter les boucles infinies
+  const randomFactor = 0.02;
+  ballVelocity.x *= (1 + (Math.random() - 0.5) * randomFactor);
+  ballVelocity.y *= (1 + (Math.random() - 0.5) * randomFactor);
+  
+  // S'assurer que la balle ne va pas trop lentement
+  const minSpeed = 100;
+  const currentSpeed = Math.sqrt(ballVelocity.x * ballVelocity.x + ballVelocity.y * ballVelocity.y);
+  if (currentSpeed < minSpeed) {
+    const scale = minSpeed / currentSpeed;
+    ballVelocity.x *= scale;
+    ballVelocity.y *= scale;
+  }
+  
+  // Appliquer la nouvelle vélocité
+  ball.setVelocity(ballVelocity.x, ballVelocity.y);
 
   // Continuer avec le traitement de la destruction de la brique
   let brickType = brick.texture.key;
@@ -390,11 +407,14 @@ function handleBrickCollision(ball, brick) {
   });
 
   let points = pointsPerBrick[brickType] || 10;
-  brick.destroy();
+  
+  // Détruire la brique visuellement et physiquement
+  brick.disableBody(true, true);
+  
   score += points * multiplier;
   updateScore(score);
 
-  // Chance de créer un power-up (25% de chance au lieu de 30%)
+  // Chance de créer un power-up (25% de chance)
   if (Math.random() < 0.25) {
     createPowerup.call(this, brick.x, brick.y);
   }
@@ -405,35 +425,38 @@ function handleBrickCollision(ball, brick) {
 }
 
 function createBricks() {
-    this.bricks = this.physics.add.staticGroup();
-    const colors = [
-      "brick_red",
-      "brick_green",
-      "brick_blue",
-      "brick_yellow",
-      "brick_purple",
-      "brick_orange",
-      "brick_pink",
-      "brick_cyan",
-    ];
-  
-    for (let y = 50; y <= 110; y += 30) {
-      for (let x = 80; x <= 580; x += 60) {
-        let isRainbowBrick = Math.random() < 0.05;
-        let brick;
-        if (isRainbowBrick) {
-          brick = this.bricks.create(x, y, "rainbow_brick").setData("isRainbow", true);
-        } else {
-          let color = colors[Math.floor(Math.random() * colors.length)];
-          brick = this.bricks.create(x, y, color);
-        }
-        // Initialiser le flag de destruction
-        brick.setData('isDestroyed', false);
-        // Ajuster la taille de la hitbox pour un meilleur contact
-        brick.body.setSize(brick.width * 0.95, brick.height * 0.95);
+  this.bricks = this.physics.add.staticGroup();
+  const colors = [
+    "brick_red",
+    "brick_green",
+    "brick_blue",
+    "brick_yellow",
+    "brick_purple",
+    "brick_orange",
+    "brick_pink",
+    "brick_cyan",
+  ];
+
+  for (let y = 50; y <= 110; y += 30) {
+    for (let x = 80; x <= 580; x += 60) {
+      let isRainbowBrick = Math.random() < 0.05;
+      let brick;
+      if (isRainbowBrick) {
+        brick = this.bricks.create(x, y, "rainbow_brick").setData("isRainbow", true);
+        // S'assurer que la brique arc-en-ciel a une teinte initiale
+        brick.setTint(Phaser.Display.Color.HexStringToColor(rainbowColors[0]).color);
+      } else {
+        let color = colors[Math.floor(Math.random() * colors.length)];
+        brick = this.bricks.create(x, y, color);
       }
+      // Initialiser le flag de destruction
+      brick.setData('isDestroyed', false);
     }
   }
+  
+  // Rafraîchir le groupe de briques pour s'assurer que les collisions sont bien configurées
+  this.bricks.refresh();
+}
 
 function getBrickColor(brickType) {
   const brickColors = {
@@ -499,37 +522,38 @@ function collectPowerup(paddle, powerup) {
       break;
 
     case POWERUP_TYPES.MULTIBALL:
-      // Limiter le nombre de balles multiples
-      if (multiballCount < 3) { // Maximum 3 power-ups multiball actifs
-        multiballCount++;
-        powerupText = "BALLES MULTIPLES";
-        createMultiBalls.call(this);
-      } else {
-        powerupText = "BALLES MAX!";
-      }
+      // Power-up balles multiples - cumulatif sans limite
+      powerupText = "BALLES MULTIPLES";
+      createMultiBalls.call(this);
       break;
 
     case POWERUP_TYPES.EXTEND:
-      // Power-up élargissement de la raquette
-      paddle.setScale(1.5, 1); // Élargir la raquette de 50%
+      // Power-up élargissement de la raquette - cumulatif
+      paddleScale *= 1.3; // Augmenter de 30%
+      paddleScale = Math.min(paddleScale, 3); // Limite à 3x la taille normale
+      paddle.setScale(paddleScale, 1);
       powerupText = "RAQUETTE ÉLARGIE";
 
-      // Revenir à la taille normale après 15 secondes
+      // Revenir progressivement à la taille normale après 15 secondes
       clearTimeout(powerupTimers.paddleSize);
       powerupTimers.paddleSize = setTimeout(() => {
-        paddle.setScale(1, 1);
+        paddleScale = Math.max(1, paddleScale - 0.3); // Réduire de 30%
+        paddle.setScale(paddleScale, 1);
       }, 15000);
       break;
 
     case POWERUP_TYPES.SHRINK:
-      // Power-up rétrécissement de la raquette (négatif pour le joueur)
-      paddle.setScale(0.7, 1); // Rétrécir la raquette à 70% de sa largeur
+      // Power-up rétrécissement de la raquette (négatif pour le joueur) - cumulatif
+      paddleScale *= 0.7; // Réduire de 30%
+      paddleScale = Math.max(paddleScale, 0.5); // Limite minimum à 50%
+      paddle.setScale(paddleScale, 1);
       powerupText = "RAQUETTE RÉTRÉCIE";
 
-      // Revenir à la taille normale après 10 secondes
+      // Revenir progressivement à la taille normale après 10 secondes
       clearTimeout(powerupTimers.paddleSize);
       powerupTimers.paddleSize = setTimeout(() => {
-        paddle.setScale(1, 1);
+        paddleScale = Math.min(1, paddleScale + 0.3); // Augmenter de 30%
+        paddle.setScale(paddleScale, 1);
       }, 10000);
       break;
 
@@ -647,7 +671,6 @@ function createMultiBalls() {
     ball.setVelocity(ballSpeed * Math.sin(angle), -ballSpeed * Math.cos(angle));
     ball.body.onWorldBounds = true;
 
-
     // Configurer les collisions
     scene.physics.add.collider(
       ball,
@@ -677,7 +700,6 @@ function cleanupMultiBalls() {
     }
   });
   multiBalls = [];
-  multiballCount = 0; // Réinitialiser le compteur
 }
 
 function nextLevel() {
@@ -699,6 +721,7 @@ function nextLevel() {
   // Réinitialiser la position et la taille de la raquette
   this.paddle.setPosition(320, 450);
   this.paddle.setScale(1, 1);
+  paddleScale = 1; // Réinitialiser l'échelle
 
   // Annuler tous les power-ups actifs
   Object.keys(powerupTimers).forEach((key) => {
@@ -899,7 +922,7 @@ function saveScore(playerScore, playerLevel) {
     ballSpeed = 200;
     originalBallSpeed = 200;
     currentLevel = 1;
-    multiballCount = 0;
+    paddleScale = 1;
 
     // Nettoyer tous les power-ups et leurs timers
     Object.keys(powerupTimers).forEach((key) => {
@@ -952,7 +975,7 @@ function loseLife() {
       ballSpeed = 200;
       originalBallSpeed = 200;
       currentLevel = 1;
-      multiballCount = 0;
+      paddleScale = 1;
       updateScore(score);
       updateMultiplier(multiplier);
       updateLives(lives);
@@ -972,6 +995,7 @@ function loseLife() {
 
     // Réinitialiser la taille de la raquette
     this.paddle.setScale(1, 1);
+    paddleScale = 1;
 
     // Réinitialiser la vitesse de la balle
     ballSpeed = originalBallSpeed;
@@ -985,7 +1009,7 @@ function loseLife() {
 
 function update(delta) {
   // Si c'est game over ou en pause, ne pas mettre à jour le jeu
-  if (isGameOver || isPaused) {
+  if (isGameOver || isPaused || waitingForNextLevel) {
     return;
   }
 
@@ -1040,15 +1064,19 @@ function update(delta) {
 
   colorChangeTimer += delta;
   if (colorChangeTimer > 200) {
-    let rainbowBrick = this.bricks
+    let rainbowBricks = this.bricks
       .getChildren()
-      .find((b) => b.getData("isRainbow"));
-    if (rainbowBrick) {
-      rainbowBrick.setTint(
-        Phaser.Display.Color.HexStringToColor(rainbowColors[colorIndex]).color
-      );
-      colorIndex = (colorIndex + 1) % rainbowColors.length;
-    }
+      .filter((b) => b.getData("isRainbow"));
+    
+    rainbowBricks.forEach(rainbowBrick => {
+      if (rainbowBrick && !rainbowBrick.getData('isDestroyed')) {
+        rainbowBrick.setTint(
+          Phaser.Display.Color.HexStringToColor(rainbowColors[colorIndex]).color
+        );
+      }
+    });
+    
+    colorIndex = (colorIndex + 1) % rainbowColors.length;
     colorChangeTimer = 0;
   }
 }
