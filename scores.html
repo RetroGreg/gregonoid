@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gregonoïd - Meilleurs Scores</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #000080;
+            color: #00FF00;
+            font-family: 'Press Start 2P', monospace;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            line-height: 1.5;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #scoresContainer {
+            width: 90%;
+            max-width: 800px;
+            padding: 20px;
+            background: rgba(0, 0, 128, 0.95);
+            border: 3px solid #00CCFF;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #00CCFF;
+            text-align: center;
+            color: #00FF00;
+        }
+        #scoresContainer h1 {
+            color: #00CCFF;
+            text-shadow: 0 0 15px #00CCFF;
+            font-size: 2em;
+            margin-bottom: 20px;
+            animation: title-flicker 3s infinite;
+        }
+        
+        @keyframes title-flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                color: #00CCFF;
+                text-shadow: 0 0 15px #00CCFF, 0 0 30px #00CCFF;
+            }
+            20%, 22%, 24%, 55% {
+                color: #0099CC;
+                text-shadow: none;
+            }
+        }
+        
+        .scores-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        .scores-table th {
+            color: #FFD700;
+            text-shadow: 0 0 10px #FFD700;
+            padding: 10px;
+            text-align: center;
+            border-bottom: 2px solid #00FF00;
+        }
+        .scores-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #003300;
+        }
+        .scores-table tr:nth-child(even) {
+            background: rgba(0, 20, 0, 0.3);
+        }
+        .scores-table tr:hover {
+            background: rgba(0, 255, 0, 0.1);
+        }
+        .no-scores {
+            color: #FF0000;
+            margin: 30px 0;
+            font-size: 1.2em;
+            text-shadow: 0 0 10px #FF0000;
+        }
+        #backButton {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #00FF00;
+            background: #000000;
+            border: 2px solid #00FF00;
+            cursor: pointer;
+            text-shadow: 0 0 5px #00FF00;
+            box-shadow: inset 0 0 10px #000000, 0 0 10px #00FF00;
+            font-family: 'Press Start 2P', monospace;
+        }
+        #backButton:hover {
+            background: #202020;
+            box-shadow: inset 0 0 15px #000000, 0 0 15px #00FF00;
+        }
+        #scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.2),
+                rgba(0, 0, 0, 0.2) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            z-index: 1;
+            opacity: 0.1;
+        }
+        
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                opacity: 1;
+                text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            }
+            20%, 22%, 24%, 55% {
+                opacity: 0.8;
+                text-shadow: none;
+            }
+        }
+        
+        .score-value {
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00;
+            animation: flicker 3s infinite;
+        }
+        
+        .level-value {
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        
+        .rank-1 td {
+            color: #FFD700;
+            text-shadow: 0 0 10px #FFD700;
+            font-size: 1.1em;
+        }
+        
+        .rank-2 td {
+            color: #C0C0C0;
+            text-shadow: 0 0 10px #C0C0C0;
+        }
+        
+        .rank-3 td {
+            color: #CD7F32;
+            text-shadow: 0 0 10px #CD7F32;
+        }
+    </style>
+</head>
+<body>
+    <div id="scoresContainer">
+        <h1>MEILLEURS SCORES</h1>
+        <div id="scoresContent">
+            <!-- Les scores seront générés ici par JavaScript -->
+        </div>
+        <button id="backButton" onclick="window.location.href='index.html'">Retour au Menu Principal</button>
+    </div>
+    <div id="scanlines"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Récupérer les scores depuis localStorage
+            const highScores = JSON.parse(localStorage.getItem('gregonoidScores')) || [];
+            const scoresContent = document.getElementById('scoresContent');
+            
+            // Vérifier s'il y a des scores à afficher
+            if (highScores.length === 0) {
+                scoresContent.innerHTML = `<p class="no-scores">Aucun score enregistré pour le moment.<br>Jouez pour être le premier sur le tableau !</p>`;
+            } else {
+                // Créer un tableau pour afficher les scores
+                let tableHTML = `
+                    <table class="scores-table">
+                        <thead>
+                            <tr>
+                                <th>Rang</th>
+                                <th>Nom</th>
+                                <th>Score</th>
+                                <th>Niveau</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                // Générer les lignes du tableau
+                highScores.forEach((score, index) => {
+                    const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                    tableHTML += `
+                        <tr class="${rankClass}">
+                            <td>${index + 1}</td>
+                            <td>${score.name}</td>
+                            <td class="score-value">${score.score}</td>
+                            <td class="level-value">${score.level}</td>
+                            <td>${score.date}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+                
+                scoresContent.innerHTML = tableHTML;
+            }
+            
+            // Effets sonores au chargement de la page
+            const hoverSound = new Audio('assets/sounds/menu_hover.wav');
+            document.getElementById('backButton').addEventListener('mouseenter', () => {
+                hoverSound.currentTime = 0;
+                hoverSound.play().catch(error => {
+                    console.error("Erreur lors de la lecture du son :", error);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

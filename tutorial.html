@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gregonoïd - Tutoriel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #00FF00;
+            font-family: 'Press Start 2P', monospace;
+            position: relative;
+            overflow: hidden;
+            line-height: 1.5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            background-image: url('assets/tutorial_bg.webp');
+            background-repeat: repeat;
+        }
+
+        #tutorialContainer {
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            max-width: 800px;
+            margin: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 30, 0.9);
+            border: 4px solid #FF0000;
+            border-radius: 0;
+            box-shadow: 0 0 25px #FF0000, inset 0 0 15px #000060;
+            overflow-y: auto;
+            color: #00FF00;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            text-align: center;
+            color: #FF0000;
+            text-shadow: 0 0 10px #FF0000;
+            font-size: 2em;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #FF0000;
+            padding-bottom: 15px;
+            animation: textPulse 2s infinite;
+        }
+
+        h2 {
+            color: #FFFF00;
+            text-shadow: 0 0 10px #FFFF00;
+            font-size: 1.5em;
+            margin-top: 30px;
+            border-left: 4px solid #FFFF00;
+            padding-left: 15px;
+        }
+
+        p {
+            margin: 15px 0;
+            text-shadow: 0 0 5px #00FF00;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin-left: 20px;
+        }
+
+        ul li {
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+        }
+
+        ul li img {
+            width: 32px;
+            height: 32px;
+            margin-right: 15px;
+            image-rendering: pixelated;
+            border: 2px solid #FFFFFF;
+            padding: 3px;
+            background-color: #000033;
+        }
+
+        .rainbow-brick {
+            animation: rainbowAnimation 2s linear infinite;
+        }
+
+        @keyframes rainbowAnimation {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #FF0000;
+        }
+
+        .nav-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #FFFFFF;
+            background-color: #880000;
+            border: 2px solid #FF0000;
+            cursor: pointer;
+            text-shadow: 0 0 5px #FF0000;
+            box-shadow: inset 0 0 10px #660000, 0 0 10px #FF0000;
+            font-family: 'Press Start 2P', monospace;
+            transition: all 0.2s;
+        }
+
+        .nav-button:hover {
+            background-color: #AA0000;
+            box-shadow: inset 0 0 15px #880000, 0 0 15px #FF6666;
+            transform: scale(1.05);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.3),
+                rgba(0, 0, 0, 0.3) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            z-index: 3;
+            opacity: 0.3;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes textPulse {
+            0% { text-shadow: 0 0 10px #FF0000; }
+            50% { text-shadow: 0 0 20px #FF6666, 0 0 30px #FF0000; }
+            100% { text-shadow: 0 0 10px #FF0000; }
+        }
+
+        .page-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .page-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #444;
+            margin: 0 5px;
+            border: 2px solid #888;
+        }
+
+        .page-dot.active {
+            background-color: #FF0000;
+            border-color: #FF6666;
+            box-shadow: 0 0 10px #FF0000;
+        }
+
+        /* Section power-ups */
+        .powerup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .powerup-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: rgba(0, 0, 60, 0.5);
+            border: 2px solid #00CCFF;
+            box-shadow: 0 0 10px #00AAFF;
+        }
+
+        .powerup-item img {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+            filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.7));
+        }
+
+        .powerup-info {
+            flex: 1;
+        }
+
+        .powerup-name {
+            color: #00FFFF;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            text-shadow: 0 0 8px #00AAFF;
+        }
+
+        .powerup-description {
+            font-size: 0.8em;
+            color: #AAFFFF;
+        }
+    </style>
+</head>
+<body>
+    <div id="tutorialContainer">
+        <h1>MANUEL D'UTILISATION</h1>
+
+        <!-- Page 1: Introduction et Contrôles -->
+        <div class="page active" id="page1">
+            <h2>BIENVENUE DANS GREGONOÏD</h2>
+            <p>
+                <strong>Gregonoïd</strong> est un jeu de casse-briques inspiré des classiques des années 80 et 90.
+                Utilisez votre raquette pour renvoyer la balle et casser toutes les briques sur chaque niveau.
+                Le but est simple : détruisez toutes les briques et marquez le plus de points possible !
+            </p>
+
+            <h2>CONTRÔLES</h2>
+            <ul>
+                <li><strong>←</strong> Déplacez la raquette vers la gauche.</li>
+                <li><strong>→</strong> Déplacez la raquette vers la droite.</li>
+            </ul>
+
+            <h2>COMMENT JOUER</h2>
+            <p>
+                Contrôlez la raquette en bas de l'écran pour renvoyer la balle vers le haut. Chaque fois que la balle frappe une brique, celle-ci est détruite et vous gagnez des points. Attention à ne pas laisser la balle tomber sous votre raquette ou vous perdrez une vie !
+            </p>
+            <p>
+                Quand vous détruisez toutes les briques d'un niveau, vous passez au niveau suivant, qui sera plus difficile. Plus vous avancez, plus la balle se déplace rapidement.
+            </p>
+        </div>
+
+        <!-- Page 2: Types de Briques -->
+        <div class="page" id="page2">
+            <h2>TYPES DE BRIQUES</h2>
+            <p>Chaque brique a une couleur et une valeur en points :</p>
+            <ul>
+                <li><img src="assets/brick_red.png" alt="Brique Rouge"> <span>Brique Rouge: 10 points</span></li>
+                <li><img src="assets/brick_green.png" alt="Brique Verte"> <span>Brique Verte: 20 points</span></li>
+                <li><img src="assets/brick_blue.png" alt="Brique Bleue"> <span>Brique Bleue: 30 points</span></li>
+                <li><img src="assets/brick_yellow.png" alt="Brique Jaune"> <span>Brique Jaune: 40 points</span></li>
+                <li><img src="assets/brick_purple.png" alt="Brique Violette"> <span>Brique Violette: 50 points</span></li>
+                <li><img src="assets/brick_orange.png" alt="Brique Orange"> <span>Brique Orange: 60 points</span></li>
+                <li><img src="assets/brick_pink.png" alt="Brique Rose"> <span>Brique Rose: 70 points</span></li>
+                <li><img src="assets/brick_cyan.png" alt="Brique Cyan"> <span>Brique Cyan: 80 points</span></li>
+                <li><img src="assets/rainbow_brick.png" alt="Brique Arc-en-ciel" class="rainbow-brick"> <span>Brique Arc-en-ciel: 100 points</span></li>
+            </ul>
+            <p>
+                Les briques arc-en-ciel sont rares mais valent beaucoup plus de points. Visez-les en priorité !
+            </p>
+        </div>
+
+        <!-- Page 3: Power-Ups -->
+        <div class="page" id="page3">
+            <h2>POWER-UPS</h2>
+            <p>Les briques détruites ont une chance de libérer un power-up. Attrapez-les avec votre raquette pour obtenir des avantages temporaires !</p>
+            
+            <div class="powerup-grid">
+                <div class="powerup-item">
+                    <img src="assets/powerup.png" alt="Multiplicateur">
+                    <div class="powerup-info">
+                        <div class="powerup-name">MULTIPLICATEUR</div>
+                        <div class="powerup-description">Augmente le multiplicateur de points de 1. Dure 10 secondes.</div>
+                    </div>
+                </div>
+                
+                <div class="powerup-item">
+                    <img src="assets/exploball.png" alt="Balles Multiples">
+                    <div class="powerup-info">
+                        <div class="powerup-name">BALLES MULTIPLES</div>
+                        <div class="powerup-description">Ajoute 2 balles supplémentaires en jeu.</div>
+                    </div>
+                </div>
+                
+                <div class="powerup-item">
+                    <img src="assets/extend.png" alt="Élargir Raquette">
+                    <div class="powerup-info">
+                        <div class="powerup-name">RAQUETTE ÉLARGIE</div>
+                        <div class="powerup-description">Augmente la largeur de la raquette de 50%. Dure 15 secondes.</div>
+                    </div>
+                </div>
+                
+                <div class="powerup-item">
+                    <img src="assets/shrink.png" alt="Rétrécir Raquette">
+                    <div class="powerup-info">
+                        <div class="powerup-name">RAQUETTE RÉTRÉCIE</div>
+                        <div class="powerup-description">Réduit la largeur de la raquette à 70%. Dure 10 secondes.</div>
+                    </div>
+                </div>
+                
+                <div class="powerup-item">
+                    <img src="assets/slowball.png" alt="Balle Ralentie">
+                    <div class="powerup-info">
+                        <div class="powerup-name">BALLE RALENTIE</div>
+                        <div class="powerup-description">Réduit la vitesse de toutes les balles à 60%. Dure 10 secondes.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <p>
+                Attention : Certains power-ups peuvent être négatifs, comme la raquette rétrécie !
+            </p>
+        </div>
+
+        <!-- Page 4: Astuces et Conseils -->
+        <div class="page" id="page4">
+            <h2>ASTUCES ET CONSEILS</h2>
+            
+            <ul style="list-style-type: disc; margin-left: 30px;">
+                <li>Frappez la balle avec différentes parties de la raquette pour modifier son angle de rebond.</li>
+                <li>Les bords de la raquette donnent un angle plus prononcé à la balle.</li>
+                <li>Essayez de garder la balle au-dessus du terrain pour maximiser les chances de toucher des briques.</li>
+                <li>Priorisez les power-ups qui tombent, surtout le multiplicateur et la raquette élargie.</li>
+                <li>Les briques arc-en-ciel rapportent plus de points, visez-les en priorité.</li>
+                <li>N'hésitez pas à sacrifier une balle pour attraper un bon power-up, si vous avez plusieurs vies.</li>
+                <li>Quand vous avez plusieurs balles, concentrez-vous sur celle qui est la plus difficile à récupérer.</li>
+            </ul>
+            
+            <h2>CRÉDITS</h2>
+            <p>
+                Gregonoïd a été créé par RetroGreg en 2024/2025. Inspiré des classiques comme Arkanoid et Krypton Egg.
+            </p>
+            
+            <p style="text-align: center; margin-top: 30px; color: #FF0000; text-shadow: 0 0 10px #FF0000;">
+                BON JEU !
+            </p>
+        </div>
+
+        <!-- Navigation et indicateurs de page -->
+        <div class="page-indicator">
+            <div class="page-dot active" data-page="1"></div>
+            <div class="page-dot" data-page="2"></div>
+            <div class="page-dot" data-page="3"></div>
+            <div class="page-dot" data-page="4"></div>
+        </div>
+        
+        <div class="navigation-buttons">
+            <button class="nav-button" id="prevButton" disabled>PRÉCÉDENT</button>
+            <button class="nav-button" id="menuButton" onclick="window.location.href='index.html'">MENU PRINCIPAL</button>
+            <button class="nav-button" id="nextButton">SUIVANT</button>
+        </div>
+    </div>
+    
+    <div id="scanlines"></div>
+
+    <script>
+        // Navigation entre les pages
+        let currentPage = 1;
+        const totalPages = 4;
+        
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const pageDots = document.querySelectorAll('.page-dot');
+        const hoverSound = new Audio('assets/sounds/menu_hover.wav');
+        const clickSound = new Audio('assets/sounds/blip.wav');
+        
+        function updatePageDisplay() {
+            // Cacher toutes les pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Afficher la page actuelle
+            document.getElementById(`page${currentPage}`).classList.add('active');
+            
+            // Mettre à jour l'état des boutons
+            prevButton.disabled = currentPage === 1;
+            nextButton.disabled = currentPage === totalPages;
+            
+            // Mettre à jour les indicateurs de page
+            pageDots.forEach(dot => {
+                dot.classList.remove('active');
+            });
+            pageDots[currentPage - 1].classList.add('active');
+        }
+        
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                clickSound.currentTime = 0;
+                clickSound.play().catch(e => console.error(e));
+                currentPage--;
+                updatePageDisplay();
+            }
+        });
+        
+        nextButton.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                clickSound.currentTime = 0;
+                clickSound.play().catch(e => console.error(e));
+                currentPage++;
+                updatePageDisplay();
+            }
+        });
+        
+        // Permettre de cliquer sur les indicateurs de page
+        pageDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                clickSound.currentTime = 0;
+                clickSound.play().catch(e => console.error(e));
+                currentPage = parseInt(dot.getAttribute('data-page'));
+                updatePageDisplay();
+            });
+        });
+        
+        // Sons pour les boutons
+        const buttons = document.querySelectorAll('.nav-button');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', () => {
+                if (!button.disabled) {
+                    hoverSound.currentTime = 0;
+                    hoverSound.play().catch(e => console.error(e));
+                }
+            });
+        });
+        
+        document.getElementById('menuButton').addEventListener('click', () => {
+            clickSound.currentTime = 0;
+            clickSound.play().catch(e => console.error(e));
+        });
+    </script>
+</body>
+</html>

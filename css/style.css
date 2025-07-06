@@ -1,0 +1,368 @@
+body {
+    font-family: 'Press Start 2P', cursive;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: url('../images/background.webp') no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+    margin: 0;
+    overflow: hidden;
+}
+
+canvas {
+    border: 3px solid #66D9EF;
+    background-color: #1a1a1a;
+    box-shadow: 0 0 15px rgba(102, 217, 239, 0.7), 0 0 30px rgba(102, 217, 239, 0.5);
+    image-rendering: pixelated;
+    border-radius: 8px;
+}
+
+h1:not(.merciTitle) {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 48px;
+    color: #00ccff;
+    text-align: center;
+    letter-spacing: 4px;
+    padding: 20px;
+    display: inline-block;
+    margin-top: 20px;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 5px #00ccff, 0 0 10px #00ccff, 0 0 20px #00ccff, 0 0 30px #0077ff, 0 0 40px #0033cc, 0 0 50px #0011aa;
+    animation: none;
+}
+
+h1::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('../images/pixel_background.webp') no-repeat center center;
+    background-size: cover;
+    z-index: -1;
+    opacity: 0.9;
+}
+
+@keyframes letter-flicker {
+    0%, 80% {
+        opacity: 1;
+        text-shadow: 
+            0 0 5px #00ccff, 
+            0 0 10px #00ccff, 
+            0 0 20px #00ccff, 
+            0 0 30px #0077ff, 
+            0 0 40px #0033cc, 
+            0 0 50px #0011aa;
+    }
+    81%, 85% {
+        opacity: 0.5;
+    }
+    86%, 100% {
+        opacity: 0;
+        text-shadow: none;
+    }
+}
+
+@keyframes global-flicker {
+    0%, 18%, 22%, 25%, 53%, 57%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 5px #00ccff, 0 0 10px #00ccff, 0 0 20px #00ccff, 0 0 30px #0077ff, 0 0 40px #0033cc, 0 0 50px #0011aa;
+    }
+    19%, 23%, 24%, 54%, 56% {
+        opacity: 0;
+        text-shadow: none;
+    }
+}
+
+@keyframes random-flicker {
+    0%, 85% {
+        opacity: 1;
+        text-shadow: 0 0 5px #00ccff, 0 0 10px #00ccff, 0 0 20px #00ccff, 0 0 30px #0077ff, 0 0 40px #0033cc, 0 0 50px #0011aa;
+    }
+    86%, 100% {
+        opacity: 0;
+        text-shadow: none;
+    }
+}
+
+h1 span {
+    display: inline-block;
+    animation: global-flicker 6s infinite;
+}
+
+h1 span.random-flicker {
+    animation: random-flicker 3s infinite alternate;
+}
+
+#score, #lives {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 20px;
+    color: #FFD700;
+    text-shadow: 2px 2px 0 #000000;
+    background-color: #444;
+    padding: 5px;
+    border: 3px solid #FF0000;
+    box-shadow: 0 0 10px #FF0000, 0 0 20px #FF0000;
+    margin: 10px;
+    border-radius: 10px;
+}
+
+@keyframes pop-in {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+#score, #lives {
+    animation: pop-in 0.5s ease-out;
+}
+
+#scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.2),
+        rgba(0, 0, 0, 0.2) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+    z-index: 10;
+}
+
+#scoreContainer {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 5;
+}
+
+#scoreDisplay, #multiplierDisplay, #livesDisplay {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 16px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #FFD700;
+    text-shadow: 1px 1px 0 #000;
+    padding: 4px 8px;
+    border-radius: 4px;
+    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.4);
+    border: none;
+    position: absolute;
+    z-index: 5;
+}
+
+#scoreDisplay {
+    top: 10px;
+    left: 10px;
+}
+
+#multiplierDisplay {
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#livesDisplay {
+    top: 10px;
+    right: 10px;
+}
+
+#title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 48px;
+    color: #00ccff;
+    text-align: center;
+    padding: 20px;
+    display: inline-block;
+    margin-top: 20px;
+    position: relative;
+    z-index: 1;
+    background-color: #002233;
+    border: 5px solid #00ccff;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #00ffcc, inset 0 0 5px #003344;
+}
+
+.merciTitle {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 3em;
+    color: #ff0000;
+    text-shadow: 0 0 10px #ff0000, 0 0 20px #ff5500, 0 0 30px #ff5500;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    position: relative;
+}
+
+#title span {
+    animation: overall-flicker 6s infinite;
+    text-shadow: 0 0 5px #00ccff, 0 0 10px #00ccff, 0 0 20px #00ccff, 0 0 30px #0077ff, 0 0 40px #0033cc, 0 0 50px #0011aa;
+}
+
+#gameTitle {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 48px;
+    text-align: center;
+    padding: 10px 20px;
+    margin: 0;
+    max-width: 500px;
+    color: #00BFFF;
+    text-shadow: 0 0 8px #00BFFF, 0 0 12px #0077FF;
+    background: linear-gradient(135deg, #002233, #001122);
+    border: 2px solid #00BFFF;
+    border-radius: 5px;
+    box-shadow: 0 0 12px rgba(0, 191, 255, 0.4), inset 0 0 5px rgba(0, 51, 102, 0.6);
+    position: relative;
+    z-index: 1;
+}
+
+#menuContainer {
+    background: url('../images/background_metal.webp') no-repeat center center;
+    background-size: cover;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border: 5px solid #ff0000;
+    box-shadow: 0 0 15px #ff0000;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 50px;
+    width: 100%;
+    max-width: 400px;
+    opacity: 1;
+    z-index: 2;
+}
+
+.menu-option {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 24px;
+    color: #ff0000;
+    padding: 10px 20px;
+    text-align: center;
+    text-shadow: 0 0 10px #ff0000, 0 0 20px #880000;
+    border: 2px solid #ff0000;
+    background-color: #220000;
+    width: 300px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px #ff0000, inset 0 0 5px #440000;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.menu-option:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000, inset 0 0 10px #880000;
+    color: #ffffff;
+}
+
+@keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000;
+    }
+    20%, 22%, 24%, 55% {
+        opacity: 0.8;
+        text-shadow: none;
+    }
+}
+
+.menu-option {
+    animation: flicker 2s infinite;
+}
+
+#gameContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 800px;
+    height: 600px;
+    padding: 20px;
+    background: url(../assets/damier.png) repeat;
+    border: 3px solid #66D9EF;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    box-sizing: border-box;
+    filter: contrast(1.2) saturate(1.2);
+    overflow: hidden;
+    position: relative;
+}
+
+#gameContainer::after {
+    content: "";
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    right: -10%;
+    bottom: -10%;
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.2), transparent 60%);
+    pointer-events: none;
+    z-index: 10;
+    border-radius: 10px;
+}
+
+#gameArea {
+    background-image: url('../assets/damier.png');
+    background-size: 128px 128px;
+    background-repeat: repeat;
+    opacity: 0.8;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 760px;
+    height: 100%;
+    background-color: #333;
+    padding-top: 30px;
+    box-sizing: border-box;
+}
+
+#interfaceContainer {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #333;
+    border: 3px solid #00FFCC;
+    box-shadow: 0 0 15px #00FFCC;
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+#menuButton {
+    font-family: 'Press Start 2P', cursive;
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #000033;
+    color: #00CCFF;
+    border: 2px solid #00CCFF;
+    box-shadow: 0 0 10px #00CCFF;
+    text-shadow: 0 0 5px #00CCFF;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+#menuButton:hover {
+    color: #FFFF00;
+    box-shadow: 0 0 15px #00CCFF;
+}
